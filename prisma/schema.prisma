@@ -12,397 +12,420 @@ datasource db {
   provider = "postgresql"
 }
 
-
-
+enum NombreRol {
+  ADMINISTRADOR
+  MOSTRADOR
+  INVENTARIO
+ 
+  @@map("nombre_rol")
+}
+ 
+enum EstadoFisico {
+  NUEVO
+  BUENO
+  REGULAR
+  DETERIORADO
+ 
+  @@map("estado_fisico")
+}
+ 
 enum EstadoEjemplar {
   DISPONIBLE
   PRESTADO
   EN_REPARACION
-  PERDIDO
   BAJA
-
+ 
   @@map("estado_ejemplar")
 }
-
+ 
 enum EstadoMulta {
   PENDIENTE
   PAGADA
   CONDONADA
-
+ 
   @@map("estado_multa")
 }
+ 
+enum TipoReporte {
+  SISTEMA
+  OPERACION
+ 
+  @@map("tipo_reporte")
+}
+ 
 
-// Better auth tablas
+ // Better auth tablas
 
 model User {
-  id            String   @id
-  name          String   @map("nombre")
-  email         String   @unique
-  emailVerified Boolean  @default(false)
+  id            String    @id
+  name          String
+  email         String    @unique
+  emailVerified Boolean   @default(false)
   image         String?
-  createdAt     DateTime @default(now()) @map("fecha_creacion")
-  updatedAt     DateTime @updatedAt
-
-  activo Boolean @default(true)
-  rolId  Int?    @map("id_rol")
-
-  rol Rol? @relation(fields: [rolId], references: [id])
-
-  // Better Auth
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+ 
+  // Campos que agrega el plugin admin
+  role          String?
+  banned        Boolean?  @default(false)
+  banReason     String?
+  banExpires    DateTime?
+ 
   sessions Session[]
   accounts Account[]
-
-  // Relaciones del dominio
-  permisos             UsuarioPermiso[] // Tiene (permisos directos)
-  clientesRegistrados  Cliente[]        @relation("ClienteRegistradoPor") // Registra lector
-  prestamosRegistrados Prestamo[]       @relation("PrestamoRegistradoPor") // Registra préstamo
-  devolucionesRecibidas Prestamo[]      @relation("PrestamoDevolucionRecibidaPor") // Recibe devolución
-  sancionesAplicadas   Sancion[]        @relation("SancionAplicadaPor") // Aplica sanción
-  auditorias           Auditoria[] // Realiza
-  reportes             Reporte[] // Genera reporte
-
-  @@index([rolId])
-  @@map("usuario")
+  usuario  Usuario?
+ 
+  @@map("user")
 }
-
+ 
 model Session {
-  id        String   @id
-  expiresAt DateTime
-  token     String   @unique
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  ipAddress String?
-  userAgent String?
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-
+  id             String   @id
+  expiresAt      DateTime
+  token          String   @unique
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  ipAddress      String?
+  userAgent      String?
+  userId         String
+  impersonatedBy String? // plugin admin
+ 
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+ 
   @@index([userId])
   @@map("session")
 }
-
+ 
+// La contrasena del personal se guarda aqui en password, no en Usuario
 model Account {
   id                    String    @id
   accountId             String
   providerId            String
   userId                String
-  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   accessToken           String?
   refreshToken          String?
   idToken               String?
   accessTokenExpiresAt  DateTime?
   refreshTokenExpiresAt DateTime?
   scope                 String?
-  password              String? // aquí vive el hash de la contraseña
+  password              String?
   createdAt             DateTime  @default(now())
   updatedAt             DateTime  @updatedAt
-
+ 
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+ 
   @@index([userId])
-  @@map("cuenta")
+  @@map("account")
 }
-
+ 
 model Verification {
   id         String   @id
   identifier String
   value      String
   expiresAt  DateTime
   createdAt  DateTime @default(now())
-  updatedAt  DateTime @default(now()) @updatedAt
-
+  updatedAt  DateTime @updatedAt
+ 
   @@index([identifier])
-  @@map("verificacion")
+  @@map("verification")
 }
+ 
+// roles de biblioweb
 
-
-
-// Rol 
-
-
-model Rol{
-  id Int  @id @default(autoincrement()) @map("id_rol")
-  nombre String @unique
-
-  usuarios User[]
-  permisos  RolPermiso[] 
-
+ 
+model Rol {
+  id     Int       @id @default(autoincrement()) @map("id_rol") @db.SmallInt
+  nombre NombreRol @unique
+ 
+  usuarios Usuario[]
+  permisos RolPermiso[]
+ 
   @@map("rol")
 }
-
-
+ 
 model Permiso {
-  id          Int     @id @default(autoincrement()) @map("id_permiso")
-  codigo      String  @unique
-  descripcion String?
+  id          Int     @id @default(autoincrement()) @map("id_permiso") @db.SmallInt
+  codigo      String  @unique @db.VarChar(40)
+  descripcion String  @db.VarChar(150)
   esGlobal    Boolean @default(false) @map("es_global")
-
+ 
   roles    RolPermiso[]
   usuarios UsuarioPermiso[]
-
+ 
   @@map("permiso")
 }
-
-// Rol Permiso de m a n mn 
-
+ 
+// Permisos base de cada rol 
 model RolPermiso {
-  rolId     Int @map("id_rol")
-  permisoId Int @map("id_permiso")
-
-  rol     Rol     @relation(fields: [rolId], references: [id], onDelete: Cascade)
-  permiso Permiso @relation(fields: [permisoId], references: [id], onDelete: Cascade)
-
-  @@id([rolId, permisoId])
-  @@index([permisoId])
+  idRol     Int @map("id_rol") @db.SmallInt
+  idPermiso Int @map("id_permiso") @db.SmallInt
+ 
+  rol     Rol     @relation(fields: [idRol], references: [id], onDelete: Cascade)
+  permiso Permiso @relation(fields: [idPermiso], references: [id], onDelete: Cascade)
+ 
+  @@id([idRol, idPermiso])
+  @@index([idPermiso])
   @@map("rol_permiso")
 }
-
+ 
+// Perfil del personal. Nombre, correo, contrasena y bloqueo estan en User.
+model Usuario {
+  id            Int      @id @default(autoincrement()) @map("id_usuario")
+  idAuth        String   @unique @map("id_auth")
+  idRol         Int      @map("id_rol") @db.SmallInt
+  fechaCreacion DateTime @default(now()) @map("fecha_creacion") @db.Timestamptz(6)
+ 
+  auth User @relation(fields: [idAuth], references: [id])
+  rol  Rol  @relation(fields: [idRol], references: [id])
+ 
+  permisos             UsuarioPermiso[]
+  clientesRegistrados  Cliente[]
+  prestamosRegistrados Prestamo[]       // Prestamo "registra" Usuario
+  devolucionesRecibidas Devolucion[]    // Devolucion "recibe" Usuario
+  multasCalculadas     Multa[]          // Multa "calcula" Usuario
+  sancionesAplicadas   Sancion[]        // Sancion "aplica" Usuario
+  reportes             Reporte[]
+  auditorias           Auditoria[]
+ 
+  @@index([idRol])
+  @@map("usuario")
+}
+ 
+// Permisos reales de cada usuario
 model UsuarioPermiso {
-  userId    String @map("id_usuario")
-  permisoId Int    @map("id_permiso")
-
-  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  permiso Permiso @relation(fields: [permisoId], references: [id], onDelete: Cascade)
-
-  @@id([userId, permisoId])
-  @@index([permisoId])
+  idUsuario Int @map("id_usuario")
+  idPermiso Int @map("id_permiso") @db.SmallInt
+ 
+  usuario Usuario @relation(fields: [idUsuario], references: [id])
+  permiso Permiso @relation(fields: [idPermiso], references: [id], onDelete: Cascade)
+ 
+  @@id([idUsuario, idPermiso])
+  @@index([idPermiso])
   @@map("usuario_permiso")
 }
+ 
 
-// libros
-
-model Autor{
-  id  Int @id @default(autoincrement()) @map("id_autor")
-  nombre  String
-  nacionalidad  String?
-
-  libros  LibroAutor[]
-
-
-  @@map("autor")
-}
-
+// Catalogo de biblioteca
 
 model Editorial {
   id     Int     @id @default(autoincrement()) @map("id_editorial")
-  nombre String
-  pais   String?
-
+  nombre String  @unique @db.VarChar(100)
+  pais   String? @db.VarChar(60)
+ 
   libros Libro[]
-
-  @@map("editorial")   
+ 
+  @@map("editorial")
 }
-
-model Categoria{
-  id Int @id  @default(autoincrement()) @map("id_categoria")
-
-  nombre String  @unique
+ 
+model Categoria {
+  id          Int     @id @default(autoincrement()) @map("id_categoria")
+  nombre      String  @unique @db.VarChar(80)
   descripcion String?
-
-  libros Libro[] // 1 a n 
-
+ 
+  libros Libro[]
+ 
   @@map("categoria")
-
 }
-
-
+ 
+model Autor {
+  id           Int     @id @default(autoincrement()) @map("id_autor")
+  nombre       String  @db.VarChar(120)
+  nacionalidad String? @db.VarChar(60)
+ 
+  libros LibroAutor[]
+ 
+  @@map("autor")
+}
+ 
 model Libro {
-  id    Int     @id @default(autoincrement()) @map("id_libro")
-  isbn      String  @unique
-  titulo   String
-  descripcion  String? @db.Text
-  anioPublicacion Int?    @map("anio_publicacion")
-
-  editorialId Int @map("id_editorial")
-  categoriaId Int @map("id_categoria")
-
-  editorial Editorial @relation(fields: [editorialId], references: [id])
-  categoria Categoria @relation(fields: [categoriaId], references: [id])
-
-  autores    LibroAutor[] // Escrito por (m:n)
-  ejemplares Ejemplar[] // Tiene copias (1 : n)
-
-  // ejemplares_disponibles (derivado): count de ejemplares con estado DISPONIBLE
-
-  @@index([editorialId])
-  @@index([categoriaId])
-  @@index([titulo])
+  id              Int     @id @default(autoincrement()) @map("id_libro")
+  isbn            String  @unique @db.VarChar(20)
+  titulo          String  @db.VarChar(200)
+  anioPublicacion Int?    @map("anio_publicacion") @db.SmallInt
+  descripcion     String?
+  idEditorial     Int     @map("id_editorial")
+  idCategoria     Int     @map("id_categoria")
+ 
+  editorial Editorial @relation(fields: [idEditorial], references: [id])
+  categoria Categoria @relation(fields: [idCategoria], references: [id])
+  autores   LibroAutor[]
+  ejemplares Ejemplar[]
+ 
+  @@index([idEditorial])
+  @@index([idCategoria])
   @@map("libro")
 }
-
-// Libro Escrito m a n
-
+ 
 model LibroAutor {
-  libroId Int @map("id_libro")
-  autorId Int @map("id_autor")
-
-  libro Libro @relation(fields: [libroId], references: [id], onDelete: Cascade)
-  autor Autor @relation(fields: [autorId], references: [id], onDelete: Cascade)
-
-  @@id([libroId, autorId])
-  @@index([autorId])
+  idLibro Int @map("id_libro")
+  idAutor Int @map("id_autor")
+ 
+  libro Libro @relation(fields: [idLibro], references: [id], onDelete: Cascade)
+  autor Autor @relation(fields: [idAutor], references: [id])
+ 
+  @@id([idLibro, idAutor])
+  @@index([idAutor])
   @@map("libro_autor")
 }
-
-
+ 
 model Ejemplar {
-  id               Int         @id @default(autoincrement()) @map("id_ejemplar")
-  codigoInventario String     @unique @map("codigo_inventario")
+  id               Int            @id @default(autoincrement()) @map("id_ejemplar")
+  idLibro          Int            @map("id_libro")
+  codigoInventario String         @unique @map("codigo_inventario") @db.VarChar(30)
+  ubicacion        String?        @db.VarChar(60)
+  estadoFisico     EstadoFisico   @default(BUENO) @map("estado_fisico")
   estado           EstadoEjemplar @default(DISPONIBLE)
-  estadoFisico     String?       @map("estado_fisico") // nuevo, bueno, regular, malo
-  ubicacion        String?
-  fechaAdquisicion DateTime       @map("fecha_adquisicion") @db.Date
+  fechaAdquisicion DateTime       @default(now()) @map("fecha_adquisicion") @db.Date
   motivoBaja       String?        @map("motivo_baja")
-
-  libroId Int   @map("id_libro")
-  libro   Libro @relation(fields: [libroId], references: [id])
-
-  prestamos Prestamo[] // Fue prestado 1 a n
-
-  @@index([libroId])
-  @@index([estado])
+ 
+  libro     Libro      @relation(fields: [idLibro], references: [id])
+  prestamos Prestamo[]
+ 
+  @@index([idLibro])
   @@map("ejemplar")
 }
-
-
-// prestado
-
+ 
+// clientes y prestamos
 
 model Cliente {
-  id           Int  @id @default(autoincrement()) @map("id_cliente")
-  nombre         String
-  identificacion String   @unique
-  email          String   @unique
-  telefono       String?
-  direccion      String?
-  credencial     String   @unique
-  fechaRegistro  DateTime @default(now()) @map("fecha_registro")
-
-  // Registra lector 1 a n
-  registradoPorId String @map("id_usuario_registra")
-  registradoPor   User   @relation("ClienteRegistradoPor", fields: [registradoPorId], references: [id])
-
-  prestamos Prestamo[] // Solicita  1 a n
-  sanciones Sancion[] // Recibe 1 a  n
-
-  // estado (derivado): activo / sancionado según sanciones vigentes y multas pendientes
-
-  @@index([registradoPorId])
+  id                Int      @id @default(autoincrement()) @map("id_cliente")
+  credencial        Int      @unique @default(autoincrement())
+  identificacion    String   @unique @db.VarChar(30)
+  nombre            String   @db.VarChar(100)
+  email             String   @db.VarChar(120)
+  telefono          String?  @db.VarChar(20)
+  direccion         String?  @db.VarChar(200)
+  fechaRegistro     DateTime @default(now()) @map("fecha_registro") @db.Timestamptz(6)
+  idUsuarioRegistro Int      @map("id_usuario_registro")
+ 
+  registradoPor Usuario    @relation(fields: [idUsuarioRegistro], references: [id])
+  prestamos     Prestamo[]
+  sanciones     Sancion[]
+ 
+  @@index([idUsuarioRegistro])
   @@map("cliente")
 }
+ 
 
 model Prestamo {
-  id               Int       @id @default(autoincrement()) @map("id_prestamo")
-  fechaPrestamo    DateTime  @default(now()) @map("fecha_prestamo")
-  fechaVencimiento DateTime  @map("fecha_vencimiento")
-  fechaDevolucion  DateTime? @map("fecha_devolucion")
-
-  clienteId  Int @map("id_cliente")
-  ejemplarId Int @map("id_ejemplar")
-  cliente    Cliente  @relation(fields: [clienteId], references: [id])
-  ejemplar   Ejemplar @relation(fields: [ejemplarId], references: [id])
-
-  // Registra préstamo (Usuario 1 a n Prestamo)
-  registradoPorId String @map("id_usuario_registra")
-  registradoPor   User   @relation("PrestamoRegistradoPor", fields: [registradoPorId], references: [id])
-
-  // Recibe devolución (Usuario 1 a n Prestamo) - null hasta que se devuelve
-  devolucionRecibidaPorId String? @map("id_usuario_recibe_devolucion")
-  devolucionRecibidaPor   User?   @relation("PrestamoDevolucionRecibidaPor", fields: [devolucionRecibidaPorId], references: [id])
-
-  multa Multa? // Genera multa (1 a 1 )
-
-  // estado (derivado): activo / devuelto / vencido según fechas
-
-  @@index([clienteId])
-  @@index([ejemplarId])
-  @@index([registradoPorId])
-  @@index([devolucionRecibidaPorId])
-  @@index([fechaVencimiento])
+  id                Int       @id @default(autoincrement()) @map("id_prestamo")
+  idCliente         Int       @map("id_cliente")
+  idEjemplar        Int       @map("id_ejemplar")
+  idUsuarioRegistra Int       @map("id_usuario_registra")
+  idRegla           Int       @map("id_regla") @db.SmallInt
+  fechaPrestamo     DateTime  @default(now()) @map("fecha_prestamo") @db.Timestamptz(6)
+  fechaVencimiento  DateTime  @map("fecha_vencimiento") @db.Date
+  // La fija el trigger al registrar la Devolucion (ver extras.sql)
+  fechaDevolucion   DateTime? @map("fecha_devolucion") @db.Timestamptz(6)
+ 
+  cliente       Cliente       @relation(fields: [idCliente], references: [id])
+  ejemplar      Ejemplar      @relation(fields: [idEjemplar], references: [id])
+  registradoPor Usuario       @relation(fields: [idUsuarioRegistra], references: [id])
+  regla         ReglaPrestamo @relation(fields: [idRegla], references: [id])
+  devolucion    Devolucion?
+ 
+  @@index([idCliente])
+  @@index([idEjemplar])
+  @@index([idUsuarioRegistra])
+  @@index([idRegla])
   @@map("prestamo")
 }
+ 
+model Devolucion {
+  id                    Int          @id @default(autoincrement()) @map("id_devolucion")
+  idPrestamo            Int          @unique @map("id_prestamo")
+  idUsuarioRecibe       Int          @map("id_usuario_recibe")
+  fecha                 DateTime     @default(now()) @db.Timestamptz(6)
+  estadoFisicoAlRecibir EstadoFisico @map("estado_fisico_al_recibir")
+  observaciones         String?
+ 
+  prestamo   Prestamo @relation(fields: [idPrestamo], references: [id])
+  recibidaPor Usuario @relation(fields: [idUsuarioRecibe], references: [id])
+  multa      Multa?
+ 
+  @@index([idUsuarioRecibe])
+  @@map("devolucion")
+}
+ 
 
 model Multa {
-  id              Int         @id @default(autoincrement()) @map("id_multa")
-  monto           Decimal     @db.Decimal(10, 2)
-  diasRetraso     Int         @map("dias_retraso")
-  estado          EstadoMulta @default(PENDIENTE)
-  fechaGeneracion DateTime    @default(now()) @map("fecha_generacion")
-  fechaPago       DateTime?   @map("fecha_pago")
-
-  prestamoId Int      @unique @map("id_prestamo")
-  prestamo   Prestamo @relation(fields: [prestamoId], references: [id])
-
-  sancion Sancion? // Origina (1 a 1)
-
+  id               Int         @id @default(autoincrement()) @map("id_multa")
+  idDevolucion     Int         @unique @map("id_devolucion")
+  idUsuarioCalcula Int         @map("id_usuario_calcula")
+  diasRetraso      Int         @map("dias_retraso")
+  monto            Decimal     @db.Decimal(10, 2)
+  estado           EstadoMulta @default(PENDIENTE)
+  fechaGeneracion  DateTime    @default(now()) @map("fecha_generacion") @db.Timestamptz(6)
+  fechaPago        DateTime?   @map("fecha_pago") @db.Timestamptz(6)
+ 
+  devolucion Devolucion @relation(fields: [idDevolucion], references: [id])
+  calculadaPor Usuario  @relation(fields: [idUsuarioCalcula], references: [id])
+  sancion    Sancion?
+ 
+  @@index([idUsuarioCalcula])
   @@map("multa")
 }
+ 
 
 model Sancion {
-  id             Int       @id @default(autoincrement()) @map("id_sancion")
-  motivo         String
-  fechaInicio    DateTime  @map("fecha_inicio")
-  fechaFin       DateTime  @map("fecha_fin")
-  fechaLevantada DateTime? @map("fecha_levantada")
-
-  clienteId Int     @map("id_cliente")
-  cliente   Cliente @relation(fields: [clienteId], references: [id])
-
-  // Aplica sanción (Usuario 1 a n Sancion)
-  aplicadaPorId String @map("id_usuario_aplica")
-  aplicadaPor   User   @relation("SancionAplicadaPor", fields: [aplicadaPorId], references: [id])
-
-  // Origina (Multa 1 a 1 Sancion) - opcional por si hay sanciones sin multa
-  multaId Int?   @unique @map("id_multa")
-  multa   Multa? @relation(fields: [multaId], references: [id])
-
-  // vigente (derivado): now() entre fechaInicio y fechaFin y fechaLevantada es null
-
-  @@index([clienteId])
-  @@index([aplicadaPorId])
+  id              Int       @id @default(autoincrement()) @map("id_sancion")
+  idCliente       Int       @map("id_cliente")
+  idMulta         Int?      @unique @map("id_multa")
+  idUsuarioAplica Int       @map("id_usuario_aplica")
+  motivo          String
+  fechaInicio     DateTime  @default(now()) @map("fecha_inicio") @db.Date
+  fechaFin        DateTime  @map("fecha_fin") @db.Date
+  fechaLevantada  DateTime? @map("fecha_levantada") @db.Date
+ 
+  cliente   Cliente @relation(fields: [idCliente], references: [id])
+  multa     Multa?  @relation(fields: [idMulta], references: [id])
+  aplicadaPor Usuario @relation(fields: [idUsuarioAplica], references: [id])
+ 
+  @@index([idCliente])
+  @@index([idUsuarioAplica])
   @@map("sancion")
 }
-
-
-
-
-// Reportes 
-
-
+ 
+ // configuracion
+ 
 model ReglaPrestamo {
-  id                     Int      @id @default(autoincrement()) @map("id_regla")
-  diasPrestamo           Int      @map("dias_prestamo")
-  maxPrestamosPorCliente Int      @map("max_prestamos_por_cliente")
-  multaPorDia            Decimal  @map("multa_por_dia") @db.Decimal(10, 2)
-  diasSancionBase        Int      @map("dias_sancion_base")
-  vigenteDesde           DateTime @map("vigente_desde") @db.Date
-
+  id                      Int      @id @default(autoincrement()) @map("id_regla") @db.SmallInt
+  diasPrestamo            Int      @map("dias_prestamo") @db.SmallInt
+  maxPrestamosPorCliente  Int      @map("max_prestamos_por_cliente") @db.SmallInt
+  multaPorDia             Decimal  @map("multa_por_dia") @db.Decimal(10, 2)
+  diasSancionBase         Int      @map("dias_sancion_base") @db.SmallInt
+  vigenteDesde            DateTime @default(now()) @map("vigente_desde") @db.Date
+ 
+  prestamos Prestamo[]
+ 
   @@map("regla_prestamo")
 }
-
-model Auditoria {
-  id         Int      @id @default(autoincrement()) @map("id_auditoria")
-  fechaHora  DateTime @default(now()) @map("fecha_hora")
-  entidad    String // tabla/entidad afectada
-  idRegistro String   @map("id_registro") // String: hay ids Int y String
-  accion     String // CREATE, UPDATE, DELETE, LOGIN
-  detalle    Json?
-
-  userId String @map("id_usuario")
-  user   User   @relation(fields: [userId], references: [id])
-
-  @@index([userId, fechaHora])
-  @@index([entidad, idRegistro])
-  @@map("auditoria")
-}
-
+ 
 model Reporte {
-  id              Int      @id @default(autoincrement()) @map("id_reporte")
-  tipo            String
-  periodoInicio   DateTime @map("periodo_inicio") @db.Date
-  periodoFin      DateTime @map("periodo_fin") @db.Date
-  fechaGeneracion DateTime @default(now()) @map("fecha_generacion")
-
-  userId String @map("id_usuario")
-  user   User   @relation(fields: [userId], references: [id])
-
-  @@index([userId])
+  id              Int         @id @default(autoincrement()) @map("id_reporte")
+  idUsuario       Int         @map("id_usuario")
+  tipo            TipoReporte
+  periodoInicio   DateTime    @map("periodo_inicio") @db.Date
+  periodoFin      DateTime    @map("periodo_fin") @db.Date
+  fechaGeneracion DateTime    @default(now()) @map("fecha_generacion") @db.Timestamptz(6)
+ 
+  usuario Usuario @relation(fields: [idUsuario], references: [id])
+ 
+  @@index([idUsuario])
   @@map("reporte")
+}
+ 
+// Bitacora de acciones del personal 
+model Auditoria {
+  id         BigInt   @id @default(autoincrement()) @map("id_auditoria")
+  idUsuario  Int      @map("id_usuario")
+  accion     String   @db.VarChar(50)
+  entidad    String   @db.VarChar(50)
+  idRegistro Int?     @map("id_registro")
+  fechaHora  DateTime @default(now()) @map("fecha_hora") @db.Timestamptz(6)
+  detalle    String?
+ 
+  usuario Usuario @relation(fields: [idUsuario], references: [id])
+ 
+  @@index([idUsuario, fechaHora])
+  @@map("auditoria")
 }
