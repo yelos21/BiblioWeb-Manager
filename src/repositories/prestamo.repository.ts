@@ -1,0 +1,60 @@
+import "server-only"
+import {prisma} from "@/lib/prisma"
+import type {Prisma, Prestamo as FilaPrestamo} from "@/generated/prisma/client"
+import { Prestamo } from "@/models/prestamo"
+import { fechaCalendario } from "@/lib/fechas"
+
+type Db = Prisma.TransactionClient;
+
+class PrestamoRepository {
+    async buscarPorId(id: number, db:Db = prisma):   Promise<Prestamo | null >{
+        const fila =  await db.prestamo.findFirst({where: {id}});
+        return fila ? this.aDominio(fila): null;
+    }
+
+    async buscarAbiertoPorEjemplar(idEjemplar: number, db: Db = prisma):  Promise<Prestamo | null >{
+        const fila = await db.prestamo.findFirst({where: {idEjemplar, fechaDevolucion: null} });
+         return fila ? this.aDominio(fila): null;
+    }
+    async listarVencidos(hoy: Date = new Date(), db: Db = prisma): Promise<Prestamo[]> {
+        const filas = await db.prestamo.findMany({
+        where: { fechaDevolucion: null, fechaVencimiento: { lt: fechaCalendario(hoy) } },
+        orderBy: { fechaVencimiento: "asc" },
+        });
+        return filas.map((f) => this.aDominio(f));
+    }
+
+    async guardar(prestamo: Prestamo, db: Db = prisma): Promise<Prestamo | null>{
+        if(prestamo.id !== null){
+            throw Error("Un prestamo existente se cierra guardando su Devolucion");
+        }
+
+        const fila = await db.prestamo.create({data:{
+            idCliente: prestamo.idCliente,
+            idEjemplar: prestamo.idEjemplar,
+            idUsuarioRegistra: prestamo.idUsuarioRegistra,
+            idRegla: prestamo.idRegla,
+            fechaPrestamo: prestamo.fechaPrestamo,
+            fechaVencimiento: prestamo.fechaVencimiento,
+        },
+        });
+        return this.aDominio(fila);
+    }
+
+    private aDominio(fila: FilaPrestamo): Prestamo {
+        return Prestamo.reconstruir({
+            id: fila.id,
+            idCliente: fila.idEjemplar,
+            idEjemplar: fila.idEjemplar,
+            idUsuarioRegistra: fila.idUsuarioRegistra,
+            idRegla: fila.idRegla,
+            fechaPrestamo: fila.fechaPrestamo,
+            fechaVencimiento: fila.fechaVencimiento,
+            fechaDevolucion: fila.fechaDevolucion,
+        });
+    }
+
+
+}
+
+export const prestamoRepository = new PrestamoRepository();
