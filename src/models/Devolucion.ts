@@ -20,7 +20,33 @@ export class Devolucion {
     observaciones: string | null = null,
     fecha: Date = new Date(),
     ):Devolucion{
-        
+        prestamo.cerrar(fecha);
+        return new Devolucion({
+            id:null, idPrestamo: prestamo.idPersistido, idUsuarioRecibe, fecha, estadoFisicoAlRecibir, observaciones,
+        },
+        prestamo,
+    );
+    }
+
+
+    static reconstruir(datos: DatosDevolucion, prestamo: Prestamo):Devolucion{
+        return new Devolucion({...datos}, prestamo);
+    }
+
+    get id() {return this.d.id};
+    get idPersistido(): number {
+        if (this.d.id === null) throw new Error("La devolucion aun no se ha guardado");
+        return this.d.id;
+    }
+    get idPrestamo() { return this.d.idPrestamo; }
+    get idUsuarioRecibe() { return this.d.idUsuarioRecibe; }
+    get fecha() { return this.d.fecha; }
+    get estadoFisicoAlRecibir() { return this.d.estadoFisicoAlRecibir; }
+    get observaciones() { return this.d.observaciones; }
+    get diasRetraso(): number { return this.prestamo.calcularDiasRetraso(this.d.fecha); }
+    
+    huboRetraso():boolean{
+        return this.diasRetraso > 0;
     }
 
 }
