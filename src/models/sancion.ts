@@ -68,8 +68,8 @@ export class Sancion{
     levantar(hoy: Date = new Date()):void{
         if(!this.estaVigente(hoy)){
             throw new Error("Esta sancion no esta vigente");
-            this.d.fechaLevantada = fechaCalendario(hoy);
         }
+        this.d.fechaLevantada = fechaCalendario(hoy);
     }
 
 }

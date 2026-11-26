@@ -41,7 +41,7 @@ export class Multa{
     get fechaPago() {return this.d.fechaPago};
 
     marcarPagado(fecha: Date = new Date()): void {
-        if(this.d.estado != "PENDIENTE"){
+        if(this.d.estado !== "PENDIENTE"){
             throw new Error("Solo se puede pagar una multa pendiente")
         };
         this.d.estado = "PAGADA";
@@ -51,7 +51,7 @@ export class Multa{
 
     condonar():void{
 
-         if(this.d.estado != "PENDIENTE"){
+         if(this.d.estado !== "PENDIENTE"){
             throw new Error("Solo se puede condonar una multa pendiente")
         };
         this.d.estado = "CONDONADA";

@@ -9,7 +9,7 @@ export interface DatosLibro {
     descripcion: string | null;
     idEditorial: number;
     idCategoria: number;
-    idsAutores: number[];
+    idsAutores: number[]; 
 }
 
 export class Libro {
@@ -26,19 +26,23 @@ export class Libro {
     ): Libro {
         if (!isbn.trim()) throw new Error("El ISBN es obligatorio");
         if (!titulo.trim()) throw new Error("El titulo es obligatorio");
-        if (idsAutores.length === 0) throw new Error ("El libro debe tener al menos un autor");
+        if (idsAutores.length === 0) throw new Error("El libro debe tener al menos un autor");
         return new Libro({
-            id: null, 
-            isbn: isbn.trim(), 
-            titulo: titulo.trim(),
-            anioPublicacion,
-            descripcion,
-            idEditorial,
-            idCategoria,
+            id: null, isbn: isbn.trim(), titulo: titulo.trim(),
+            anioPublicacion, descripcion, idEditorial, idCategoria,
             idsAutores: [...new Set(idsAutores)],
         });
     }
 
+    static reconstruir(datos: DatosLibro, ejemplares: Ejemplar[] = []): Libro {
+        return new Libro({ ...datos, idsAutores: [...datos.idsAutores] }, [...ejemplares]);
+    }
+
+    get id() { return this.d.id; }
+    get idPersistido(): number {
+        if (this.d.id === null) throw new Error("El libro aun no se ha guardado");
+        return this.d.id;
+    }
     get isbn() { return this.d.isbn; }
     get titulo() { return this.d.titulo; }
     get anioPublicacion() { return this.d.anioPublicacion; }
@@ -49,15 +53,15 @@ export class Libro {
     get listaEjemplares(): Ejemplar[] { return [...this.ejemplares]; }
 
     agregarAutor(idAutor: number): void {
-        if (this.d.idsAutores.includes(idAutor)) return;
-        this.d.idsAutores.push(idAutor);
+        if (this.d.idsAutores.includes(idAutor)) return; // ya estaba: no hacemos nada
+        this.d.idsAutores.push(idAutor);                  // push = agrega al final del arreglo
     }
 
     agregarEjemplar(ejemplar: Ejemplar): void {
         if (this.d.id !== null && ejemplar.idLibro !== this.d.id) {
             throw new Error("El ejemplar pertenece a otro libro");
         }
-        this.ejemplar.push(ejemplar);
+        this.ejemplares.push(ejemplar);
     }
 
     crearEjemplares(
@@ -66,21 +70,22 @@ export class Libro {
         ubicacion: string | null = null,
         estadoFisico: EstadoFisico = "NUEVO",
     ): Ejemplar[] {
-        if (!Number, isInteger(copias) || copias < 1) throw new Error("El numero de copia debe ser un entero mayor a 0");
-        if(!prefijoCodigo.trim()) throw new Error("El prefijo de codigo es obligatorio");
+        if (!Number.isInteger(copias) || copias < 1) throw new Error("El numero de copias debe ser un entero mayor a 0");
+        if (!prefijoCodigo.trim()) throw new Error("El prefijo de codigo es obligatorio");
         const idLibro = this.idPersistido;
         const inicio = this.ejemplares.length;
         const nuevos: Ejemplar[] = [];
         for (let i = 1; i <= copias; i++) {
-            const codigo = `${prefijoCodigo.trim()}-${String(inicio + i).padStart(2, "0")}`
-            nuevo.push(EJemplar.registrar(idLibro, codgio, ubicacion, estadoFisico));
+            // padStart(2, "0") rellena con ceros a la izquierda: 1 -> "01"
+            const codigo = `${prefijoCodigo.trim()}-${String(inicio + i).padStart(2, "0")}`;
+            nuevos.push(Ejemplar.registrar(idLibro, codigo, ubicacion, estadoFisico));
         }
         this.ejemplares.push(...nuevos);
         return nuevos;
     }
 
-    contarEjemplaresDisponibles(): number { 
-        return this.ejemplares.filter((e) => e.estaDisponible()).length;    
+    contarEjemplaresDisponibles(): number {
+        return this.ejemplares.filter((e) => e.estaDisponible()).length;
     }
 
     estaDisponible(): boolean {

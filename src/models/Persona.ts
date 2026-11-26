@@ -1,6 +1,6 @@
 export abstract class Persona {
     protected constructor(
-        protected readonly _id: number, 
+        protected readonly _id: number | null, 
         protected readonly _nombre: string,
         protected readonly _email: string,
         protected readonly _telefono: string | null,
