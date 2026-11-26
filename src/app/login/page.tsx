@@ -21,9 +21,7 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      // Aquí conecta tu autenticación real (Better Auth). Ejemplo:
-      // const { error } = await authClient.signIn.email({ email, password, rememberMe });
-      // if (error) { setError("Correo o contraseña incorrectos."); return; }
+    
       if (!email.trim() || !password.trim()) {
         setError("Por favor ingresa tu correo institucional y contraseña.");
         return;
