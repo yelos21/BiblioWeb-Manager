@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { LogOut } from "lucide-react";
 import { authClient } from "@/lib/auth-client";
 
-export default function LogoutButton() {
+export default function LogoutButton({ soloIcono = false }: { soloIcono?: boolean }) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
 
@@ -18,6 +18,21 @@ export default function LogoutButton() {
     } finally {
       setLoading(false);
     }
+  }
+
+  if (soloIcono) {
+    return (
+      <button
+        type="button"
+        onClick={handleLogout}
+        disabled={loading}
+        aria-label="Cerrar sesión"
+        title="Cerrar sesión"
+        className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-[#7A8B85] transition hover:bg-[#F3F7F5] hover:text-[#1B2D27] disabled:cursor-not-allowed disabled:opacity-60"
+      >
+        <LogOut size={18} />
+      </button>
+    );
   }
 
   return (
