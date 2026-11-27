@@ -64,7 +64,6 @@ export const auth = betterAuth({
   }),
   emailAndPassword: {
     enabled: true,
-    // P4: solo el personal autorizado tiene cuenta; no hay registro publico.
     disableSignUp: true,
     resetPasswordTokenExpiresIn: 60 * 60,
     revokeSessionsOnPasswordReset: true,
@@ -76,8 +75,6 @@ export const auth = betterAuth({
       }
 
       try {
-        // Import dinámico: `email.ts` usa `server-only` y este archivo también
-        // lo importan scripts de Node (por ejemplo, el seed del administrador).
         const { enviarCorreo } = await import("./email");
 
         await enviarCorreo({
@@ -89,7 +86,6 @@ export const auth = betterAuth({
           }),
         });
       } catch (error) {
-        // No se debe revelar si el correo existe ni romper la solicitud.
         console.error(
           "No se pudo enviar el correo de recuperación de contraseña:",
           error,
