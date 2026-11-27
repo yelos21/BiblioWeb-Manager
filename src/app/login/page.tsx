@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { BookText, ChevronRight } from "lucide-react";
 import Button from "@/components/ui/button";
 import Input from "@/components/ui/input";
+import { authClient } from "@/lib/auth-client";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -21,15 +22,24 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-    
-      if (!email.trim() || !password.trim()) {
-        setError("Por favor ingresa tu correo institucional y contraseña.");
+      if (!email.trim() || !password) {
+        setError("Por favor ingresa tu correo y contraseña.");
         return;
       }
 
-      // Simulación breve de autenticación
-      await new Promise((resolve) => setTimeout(resolve, 700));
-      router.push("/dashboard"); // Panel de inicio (pantalla 02 del prototipo)
+      const { error: authError } = await authClient.signIn.email({
+        email: email.trim(),
+        password,
+        rememberMe,
+      });
+
+      if (authError) {
+        setError(authError.message ?? "Correo o contraseña incorrectos.");
+        return;
+      }
+
+      router.push("/dashboard");
+      router.refresh();
     } catch {
       setError("No se pudo iniciar sesión. Verifica tus credenciales.");
     } finally {
@@ -122,7 +132,7 @@ export default function LoginPage() {
           <form onSubmit={handleSubmit} className="space-y-5" noValidate>
             <Input
               id="email"
-              label="Correo institucional"
+              label="Correo"
               type="email"
               autoComplete="email"
               required

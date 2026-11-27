@@ -22,13 +22,15 @@
 - [x] Clases de dominio base: `Usuario`, `Cliente`, `Libro`, `Ejemplar`, `Prestamo`, `Devolucion`, `Multa`, `Sancion`, `ReglaPrestamo`, `Rol`, `Permiso`, `Autor`, `Categoria`, `Editorial`, `ReporteOperacion`, `ReporteSistema`.
 - [x] Repositorios existentes: `prestamo`, `Devolucion`, `Multa`, `Sancion`, `Regla`, `Ejemplar`.
 - [x] Helper de correos con Resend en `src/lib/email.ts`.
+- [x] Login real con `authClient.signIn.email`, dashboard protegido y cierre de sesión.
+- [x] Script `scripts/seed-admin.ts` para crear la primera cuenta.
 - [x] `pnpm typecheck` y `next build` pasan.
 
 ### Pendiente inmediato
 
-- [ ] Login real (hoy la pantalla simula la autenticación).
-- [ ] Protección de rutas y permisos en servidor.
-- [ ] Script para crear la primera cuenta de administrador.
+- [x] Login real con Better Auth.
+- [x] Protección de rutas y permisos en servidor (`src/lib/session.ts`).
+- [x] Script para crear la primera cuenta de administrador.
 - [ ] Cambio de contraseña obligatorio (`debeCambiarPassword`).
 - [ ] Repositorios que faltan (Cliente, Libro, Autor, Categoría, Editorial, Usuario, Reporte, Auditoría).
 - [ ] Pantallas del prototipo P14.
@@ -576,10 +578,10 @@ Notas:
 
 ## 4. Checklist resumido
 
-- [ ] Login real con `authClient`.
-- [ ] Guard `requireUsuario` / `requirePermiso`.
-- [ ] Dashboard y cierre de sesión.
-- [ ] Script `seed:admin`.
+- [x] Login real con `authClient`.
+- [x] Guard `requireUsuario` / `requirePermiso`.
+- [x] Dashboard y cierre de sesión.
+- [x] Script `seed:admin`.
 - [ ] Cambio de contraseña obligatorio.
 - [ ] Completar `Usuario`, `Devolucion` y `ReglaPrestamo`.
 - [ ] Repositorios faltantes.
