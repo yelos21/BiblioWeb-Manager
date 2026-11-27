@@ -1,15 +1,17 @@
 import { Persona } from "./Persona";
-import type { EstadoCliente } from "./Enums";
+import type { EstadoCliente, TipoDocumento } from "./Enums";
 import type { Sancion } from "./sancion";
-import type { Prestamo } from "./restamo";
+import type { Prestamo } from "./prestamo";
 import type { Multa } from "./multa";
 import type { ReglaPrestamo } from "./ReglaPrestamo";
 
 export interface DatosCliente {
     id: number | null;
     credencial: number | null;
+    nombres: string;
+    apellidos: string;
+    tipoDocumento: TipoDocumento;
     identificacion: string;
-    nombre: string;
     email: string;
     telefono: string | null;
     direccion: string | null;
@@ -26,26 +28,31 @@ export class Cliente extends Persona {
         private prestamos: Prestamo[] = [],
         private multas: Multa[] = [],
     ) {
-        super(d.id ?? 0, d.nombre, d.email, d.telefono);
+        super(d.id, `${d.nombres} ${d.apellidos}`, d.email, d.telefono);
     }
     
     static registrar(
+        nombres: string,
+        apellidos: string,
+        tipoDocumento: TipoDocumento,
         identificacion: string,
-        nombre: string,
         email: string,
         idUsuarioRegistro: number,
         telefono: string | null = null,
         direccion: string | null = null,
         hoy: Date = new Date(),
     ): Cliente {
+        if (!nombres.trim()) throw new Error("Los nombres son obligatorios");
+        if (!apellidos.trim()) throw new Error("Los apellidos son obligatorios");
         if (!identificacion.trim()) throw new Error("La identificacion es obligatoria");
-        if (!nombre.trim()) throw new Error("El nombre es obligatorio");
         if (!FORMATO_EMAIL.test(email.trim())) throw new Error("Correo electronico invalido");
         return new Cliente({
             id: null,
             credencial: null,
+            nombres: nombres.trim(),
+            apellidos: apellidos.trim(),
+            tipoDocumento,
             identificacion: identificacion.trim(),
-            nombre: nombre.trim(),
             email: email.trim().toLowerCase(),
             telefono: telefono?.trim() || null,
             direccion: direccion?.trim() || null,
@@ -64,6 +71,9 @@ export class Cliente extends Persona {
     }
 
     get credencial() { return this.d.credencial; }
+    get nombres() { return this.d.nombres; }
+    get apellidos() { return this.d.apellidos; }
+    get tipoDocumento() { return this.d.tipoDocumento; }
     get identificacion() { return this.d.identificacion; }
     get direccion() { return this.d.direccion; }
     get fechaRegistro() { return this.d.fechaRegistro; }

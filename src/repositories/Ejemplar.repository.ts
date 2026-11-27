@@ -31,6 +31,7 @@ class EjemplarRepository{
         return Ejemplar.reconstruir({
         id: fila.id,
         idLibro: fila.idLibro,
+        numeroCopia: fila.numeroCopia,
         codigoInventario: fila.codigoInventario,
         ubicacion: fila.ubicacion,
         estadoFisico: fila.estadoFisico,

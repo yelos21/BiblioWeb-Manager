@@ -8,6 +8,12 @@ type Db = Prisma.TransactionClient;
 class ReglaRepository{
     async obtenerVigente(db: Db = prisma): Promise< ReglaPrestamo>{
         const fila = await db.reglaPrestamo.findFirst({
+            where: {
+                OR: [
+                    { vigenteHasta: null },
+                    { vigenteHasta: { gte: new Date() } },
+                ],
+            },
             orderBy: [{vigenteDesde: "desc"}, {id: "desc"}],
         });
 
@@ -16,6 +22,7 @@ class ReglaRepository{
         }  
             return new ReglaPrestamo(
                 fila.id,
+                fila.nombre,
                 fila.diasPrestamo,
                 fila.maxPrestamosPorCliente,
                 fila.multaPorDia.toNumber(), 

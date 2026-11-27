@@ -1,5 +1,7 @@
 import type { EstadoFisico } from "./Enums";
 import type { Prestamo } from "./prestamo";
+import type { ReglaPrestamo } from "./ReglaPrestamo";
+import { Multa } from "./multa";
 
 export interface DatosDevolucion {
     id: number | null;
@@ -20,12 +22,19 @@ export class Devolucion {
     observaciones: string | null = null,
     fecha: Date = new Date(),
     ):Devolucion{
+        const idPrestamo = prestamo.idPersistido;
         prestamo.cerrar(fecha);
-        return new Devolucion({
-            id:null, idPrestamo: prestamo.idPersistido, idUsuarioRecibe, fecha, estadoFisicoAlRecibir, observaciones,
-        },
-        prestamo,
-    );
+        return new Devolucion(
+            {
+                id: null,
+                idPrestamo,
+                idUsuarioRecibe,
+                fecha,
+                estadoFisicoAlRecibir,
+                observaciones: observaciones?.trim() || null,
+            },
+            prestamo,
+        );
     }
 
 
@@ -49,4 +58,8 @@ export class Devolucion {
         return this.diasRetraso > 0;
     }
 
+    generarMulta(regla: ReglaPrestamo, idUsuarioCalcula: number): Multa | null {
+        if (!this.huboRetraso()) return null;
+        return Multa.generar(this, regla, idUsuarioCalcula, this.prestamo.idCliente);
+    }
 }

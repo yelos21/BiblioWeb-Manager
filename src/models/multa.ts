@@ -1,4 +1,4 @@
-import type { EstadoMulta } from "./Enums";
+import type { ConceptoMulta, EstadoMulta } from "./Enums";
 import type { Devolucion } from "./Devolucion";
 import type { ReglaPrestamo } from "./ReglaPrestamo";
  
@@ -6,7 +6,8 @@ export interface DatosMulta {
   id: number | null;
   idDevolucion: number;
   idUsuarioCalcula: number;
-  idCliente: number;           
+  idCliente: number;
+  concepto: ConceptoMulta;
   diasRetraso: number;
   monto: number;
   estado: EstadoMulta;
@@ -29,6 +30,7 @@ export class Multa {
       idDevolucion: devolucion.idPersistido,
       idUsuarioCalcula,
       idCliente,
+      concepto: "RETRASO",
       diasRetraso: devolucion.diasRetraso,
       monto: 0,
       estado: "PENDIENTE",
@@ -47,6 +49,7 @@ export class Multa {
   get idDevolucion() { return this.d.idDevolucion; }
   get idUsuarioCalcula() { return this.d.idUsuarioCalcula; }
   get idCliente() { return this.d.idCliente; }
+  get concepto() { return this.d.concepto; }
   get diasRetraso() { return this.d.diasRetraso; }
   get monto() { return this.d.monto; }
   get estado() { return this.d.estado; }

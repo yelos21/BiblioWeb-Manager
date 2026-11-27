@@ -34,6 +34,8 @@ class PrestamoRepository {
             idEjemplar: prestamo.idEjemplar,
             idUsuarioRegistra: prestamo.idUsuarioRegistra,
             idRegla: prestamo.idRegla,
+            diasPrestamo: prestamo.diasPrestamo,
+            observaciones: prestamo.observaciones,
             fechaPrestamo: prestamo.fechaPrestamo,
             fechaVencimiento: prestamo.fechaVencimiento,
         },
@@ -44,10 +46,12 @@ class PrestamoRepository {
     private aDominio(fila: FilaPrestamo): Prestamo {
         return Prestamo.reconstruir({
             id: fila.id,
-            idCliente: fila.idEjemplar,
+            idCliente: fila.idCliente,
             idEjemplar: fila.idEjemplar,
             idUsuarioRegistra: fila.idUsuarioRegistra,
             idRegla: fila.idRegla,
+            diasPrestamo: fila.diasPrestamo,
+            observaciones: fila.observaciones,
             fechaPrestamo: fila.fechaPrestamo,
             fechaVencimiento: fila.fechaVencimiento,
             fechaDevolucion: fila.fechaDevolucion,

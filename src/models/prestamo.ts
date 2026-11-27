@@ -8,6 +8,8 @@ import type { ReglaPrestamo } from "./ReglaPrestamo";
     idEjemplar: number;
     idUsuarioRegistra: number;
     idRegla: number;
+    diasPrestamo: number;
+    observaciones: string | null;
     fechaPrestamo: Date;
     fechaVencimiento: Date;
     fechaDevolucion: Date | null;
@@ -21,6 +23,7 @@ import type { ReglaPrestamo } from "./ReglaPrestamo";
         idEjemplar: number,
         idUsuarioRegistra: number,
         regla: ReglaPrestamo,
+        observaciones: string | null = null,
         ahora: Date = new Date(),
     ): Prestamo {
         return new Prestamo({
@@ -29,6 +32,8 @@ import type { ReglaPrestamo } from "./ReglaPrestamo";
         idEjemplar,
         idUsuarioRegistra,
         idRegla: regla.id,
+        diasPrestamo: regla.diasPrestamo,
+        observaciones,
         fechaPrestamo: ahora,
         fechaVencimiento: regla.calcularFechaVencimiento(ahora),
         fechaDevolucion: null,
@@ -49,6 +54,8 @@ import type { ReglaPrestamo } from "./ReglaPrestamo";
     get idEjemplar() { return this.d.idEjemplar; }
     get idUsuarioRegistra() { return this.d.idUsuarioRegistra; }
     get idRegla() { return this.d.idRegla; }
+    get diasPrestamo() { return this.d.diasPrestamo; }
+    get observaciones() { return this.d.observaciones; }
     get fechaPrestamo() { return this.d.fechaPrestamo; }
     get fechaVencimiento() { return this.d.fechaVencimiento; }
     get fechaDevolucion() { return this.d.fechaDevolucion; }

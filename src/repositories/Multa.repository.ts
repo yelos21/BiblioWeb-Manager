@@ -7,11 +7,7 @@ type Db = Prisma.TransactionClient
 
 class MultaRepository{
     async buscarPorId(id: number, db: Db = prisma): Promise< Multa | null> {
-        const fila = await db.multa.findUnique({
-            where: {id},
-            include: {devolucion: {include: {prestamo: {select: {idCliente: true}}}}
-        },
-    });
+        const fila = await db.multa.findUnique({ where: {id} });
         if (!fila) {
             return null;
         }
@@ -19,7 +15,8 @@ class MultaRepository{
             id: fila.id,
             idDevolucion: fila.idDevolucion,
             idUsuarioCalcula: fila.idUsuarioCalcula,
-            idCliente: fila.devolucion.prestamo.idCliente,
+            idCliente: fila.idCliente,
+            concepto: fila.concepto,
             diasRetraso: fila.diasRetraso,
             monto: fila.monto.toNumber(), 
             estado: fila.estado,
@@ -35,7 +32,9 @@ class MultaRepository{
             const fila = await db.multa.create({
             data: {
                 idDevolucion: multa.idDevolucion,
+                idCliente: multa.idCliente,
                 idUsuarioCalcula: multa.idUsuarioCalcula,
+                concepto: multa.concepto,
                 diasRetraso: multa.diasRetraso,
                 monto: multa.monto,
                 estado: multa.estado,
@@ -47,7 +46,8 @@ class MultaRepository{
             id: fila.id,
             idDevolucion: fila.idDevolucion,
             idUsuarioCalcula: fila.idUsuarioCalcula,
-            idCliente: multa.idCliente,
+            idCliente: fila.idCliente,
+            concepto: fila.concepto,
             diasRetraso: fila.diasRetraso,
             monto: fila.monto.toNumber(),
             estado: fila.estado,

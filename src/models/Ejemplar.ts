@@ -4,6 +4,7 @@ import { fechaCalendario } from "@/lib/fechas";
 export interface DatosEjemplar {
     id: number | null;
     idLibro: number;
+    numeroCopia: number;
     codigoInventario: string;
     ubicacion: string | null;
     estadoFisico: EstadoFisico;
@@ -17,15 +18,18 @@ export class Ejemplar {
 
     static registrar(
         idLibro: number,
+        numeroCopia: number,
         codigoInventario: string,
         ubicacion: string | null=null,
         estadoFisico: EstadoFisico = "BUENO",
         hoy: Date = new Date(),
     ): Ejemplar {
+        if (!Number.isInteger(numeroCopia) || numeroCopia < 1) throw new Error("El numero de copia debe ser un entero mayor a 0");
         if (!codigoInventario.trim()) throw new Error ("El codigo de inventario es obligatorio")
             return new Ejemplar({
                 id: null,
                 idLibro,
+                numeroCopia,
                 codigoInventario: codigoInventario.trim(),
                 ubicacion: ubicacion?.trim() || null,
                 estadoFisico,
@@ -40,6 +44,7 @@ export class Ejemplar {
     }
     get id() {return this.d.id}
     get idLibro() { return this.d.idLibro; }
+    get numeroCopia() { return this.d.numeroCopia; }
     get codigoInventario() { return this.d.codigoInventario; }
     get ubicacion() { return this.d.ubicacion; }
     get estadoFisico() { return this.d.estadoFisico; }

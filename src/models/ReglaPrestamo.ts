@@ -3,6 +3,7 @@ import { fechaCalendario, SumarDias  } from "@/lib/fechas";
 export class ReglaPrestamo {
     constructor(
         public readonly id: number,
+        public readonly nombre: string,
         public readonly diasPrestamo: number,
         public readonly maxPrestamosPorCliente: number,
         public readonly multaPorDia: number,
