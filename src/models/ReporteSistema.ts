@@ -3,7 +3,7 @@ import type { Usuario } from "./Usuario";
 import type { Libro } from "./Libro";
 import type { Ejemplar } from "./Ejemplar";
 
-expert interface DatosSistema {
+export interface DatosSistema {
     usuarios: Usuario[];
     libros: Libro[];
     ejemplares: Ejemplar[];

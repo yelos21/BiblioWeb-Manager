@@ -4,6 +4,7 @@ import { fechaCalendario } from "@/lib/fechas";
 export interface DatosEjemplar {
     id: number | null;
     idLibro: number;
+    numeroCopia: number;
     codigoInventario: string;
     ubicacion: string | null;
     estadoFisico: EstadoFisico;
@@ -17,15 +18,18 @@ export class Ejemplar {
 
     static registrar(
         idLibro: number,
+        numeroCopia: number,
         codigoInventario: string,
         ubicacion: string | null=null,
         estadoFisico: EstadoFisico = "BUENO",
         hoy: Date = new Date(),
     ): Ejemplar {
+        if (!Number.isInteger(numeroCopia) || numeroCopia < 1) throw new Error("El numero de copia debe ser un entero mayor a 0");
         if (!codigoInventario.trim()) throw new Error ("El codigo de inventario es obligatorio")
             return new Ejemplar({
                 id: null,
                 idLibro,
+                numeroCopia,
                 codigoInventario: codigoInventario.trim(),
                 ubicacion: ubicacion?.trim() || null,
                 estadoFisico,
@@ -36,12 +40,14 @@ export class Ejemplar {
     }
 
     static reconstruir(datos: DatosEjemplar): Ejemplar {
-        return new EJemplar({ ...datos});
+        return new Ejemplar({ ...datos});
     }
+    get id() {return this.d.id}
     get idLibro() { return this.d.idLibro; }
+    get numeroCopia() { return this.d.numeroCopia; }
     get codigoInventario() { return this.d.codigoInventario; }
     get ubicacion() { return this.d.ubicacion; }
-    get estadoFisico() { return this.d.ubicacion; }
+    get estadoFisico() { return this.d.estadoFisico; }
     get estado() { return this.d.estado; }
     get fechaAdquisicion() { return this.d.fechaAdquisicion; }
     get motivoBaja() { return this.d.motivoBaja; }
@@ -66,7 +72,7 @@ export class Ejemplar {
     enviarAReparacion(): void {
         if (this.d.estado === "PRESTADO") throw new Error("No se puede reparar un ejemplar que esta prestado");
         if (this.d.estado === "BAJA") throw new Error("El ejemplar esta dado de baja");
-        this.d.estado = "EN_REPPARACION";
+        this.d.estado = "EN_REPARACION";
     }
 
     darDeBaja(motivo: string): void {
@@ -79,7 +85,7 @@ export class Ejemplar {
 
     actualizarDatos(cambios: Partial<Pick<DatosEjemplar, "ubicacion" | "estadoFisico">>): void {
         if (this.d.estado === "BAJA") throw new Error("No se puede editar un ejemplar dado de baja");
-        if (cambio.ubicacion !== undefined) this.d.ubicacion = cambio.ubicacion?.trim() || null;
-        if (cambios.estadoFisico !== undefined) this.d.estadoFisico = cambio.estadoFisico;
+        if (cambios.ubicacion !== undefined) this.d.ubicacion = cambios.ubicacion?.trim() || null;
+        if (cambios.estadoFisico !== undefined) this.d.estadoFisico = cambios.estadoFisico;
     }
 } 

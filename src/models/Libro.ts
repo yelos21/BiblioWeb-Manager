@@ -9,7 +9,7 @@ export interface DatosLibro {
     descripcion: string | null;
     idEditorial: number;
     idCategoria: number;
-    idsAutores: number[]; 
+    idsAutores: number[];
 }
 
 export class Libro {
@@ -26,10 +26,15 @@ export class Libro {
     ): Libro {
         if (!isbn.trim()) throw new Error("El ISBN es obligatorio");
         if (!titulo.trim()) throw new Error("El titulo es obligatorio");
-        if (idsAutores.length === 0) throw new Error("El libro debe tener al menos un autor");
+        if (idsAutores.length === 0) throw new Error ("El libro debe tener al menos un autor");
         return new Libro({
-            id: null, isbn: isbn.trim(), titulo: titulo.trim(),
-            anioPublicacion, descripcion, idEditorial, idCategoria,
+            id: null, 
+            isbn: isbn.trim(), 
+            titulo: titulo.trim(),
+            anioPublicacion,
+            descripcion,
+            idEditorial,
+            idCategoria,
             idsAutores: [...new Set(idsAutores)],
         });
     }
@@ -53,8 +58,8 @@ export class Libro {
     get listaEjemplares(): Ejemplar[] { return [...this.ejemplares]; }
 
     agregarAutor(idAutor: number): void {
-        if (this.d.idsAutores.includes(idAutor)) return; // ya estaba: no hacemos nada
-        this.d.idsAutores.push(idAutor);                  // push = agrega al final del arreglo
+        if (this.d.idsAutores.includes(idAutor)) return;
+        this.d.idsAutores.push(idAutor);
     }
 
     agregarEjemplar(ejemplar: Ejemplar): void {
@@ -70,22 +75,21 @@ export class Libro {
         ubicacion: string | null = null,
         estadoFisico: EstadoFisico = "NUEVO",
     ): Ejemplar[] {
-        if (!Number.isInteger(copias) || copias < 1) throw new Error("El numero de copias debe ser un entero mayor a 0");
-        if (!prefijoCodigo.trim()) throw new Error("El prefijo de codigo es obligatorio");
+        if (!Number.isInteger(copias) || copias < 1) throw new Error("El numero de copia debe ser un entero mayor a 0");
+        if(!prefijoCodigo.trim()) throw new Error("El prefijo de codigo es obligatorio");
         const idLibro = this.idPersistido;
         const inicio = this.ejemplares.length;
         const nuevos: Ejemplar[] = [];
         for (let i = 1; i <= copias; i++) {
-            // padStart(2, "0") rellena con ceros a la izquierda: 1 -> "01"
-            const codigo = `${prefijoCodigo.trim()}-${String(inicio + i).padStart(2, "0")}`;
-            nuevos.push(Ejemplar.registrar(idLibro, codigo, ubicacion, estadoFisico));
+            const codigo = `${prefijoCodigo.trim()}-${String(inicio + i).padStart(2, "0")}`
+            nuevos.push(Ejemplar.registrar(idLibro, inicio + i, codigo, ubicacion, estadoFisico));
         }
         this.ejemplares.push(...nuevos);
         return nuevos;
     }
 
-    contarEjemplaresDisponibles(): number {
-        return this.ejemplares.filter((e) => e.estaDisponible()).length;
+    contarEjemplaresDisponibles(): number { 
+        return this.ejemplares.filter((e) => e.estaDisponible()).length;    
     }
 
     estaDisponible(): boolean {

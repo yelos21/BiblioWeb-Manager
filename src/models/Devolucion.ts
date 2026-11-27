@@ -1,5 +1,7 @@
 import type { EstadoFisico } from "./Enums";
 import type { Prestamo } from "./prestamo";
+import type { ReglaPrestamo } from "./ReglaPrestamo";
+import { Multa } from "./multa";
 
 export interface DatosDevolucion {
     id: number | null;
@@ -58,6 +60,6 @@ export class Devolucion {
 
     generarMulta(regla: ReglaPrestamo, idUsuarioCalcula: number): Multa | null {
         if (!this.huboRetraso()) return null;
-        return Multa.calcular(this.idPersistido, idUsuarioCalcula, this.diasRetraso(), regla.multaPorDia)
+        return Multa.generar(this, regla, idUsuarioCalcula, this.prestamo.idCliente);
     }
 }

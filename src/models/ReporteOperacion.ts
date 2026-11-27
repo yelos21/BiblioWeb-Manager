@@ -1,7 +1,7 @@
 import { Reporte, type ResumenReporte } from "./Reporte";
-import type { Prestamo } from "./Prestamo";
+import type { Prestamo } from "./prestamo";
 import type { Devolucion } from "./Devolucion";
-import type { Multa } from "./Multa";
+import type { Multa } from "./multa";
 import { fechaCalendario } from "../lib/fechas";
 
 export interface DatosOperacion {

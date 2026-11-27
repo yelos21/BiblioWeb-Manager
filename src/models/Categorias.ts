@@ -4,6 +4,6 @@ export class Categoria {
         public readonly nombre: string,
         public readonly descripcion: string | null = null,
     ) {
-        if(!nombre.trin()) throw new Error("El nombre de la categoria es obligatorio");
+        if (!nombre.trim()) throw new Error("El nombre de la categoria es obligatorio");
     }
 }
