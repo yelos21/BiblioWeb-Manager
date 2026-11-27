@@ -31,7 +31,8 @@
 - [x] Login real con Better Auth.
 - [x] Protección de rutas y permisos en servidor (`src/lib/session.ts`).
 - [x] Script para crear la primera cuenta de administrador.
-- [ ] Cambio de contraseña obligatorio (`debeCambiarPassword`).
+- [x] Cambio de contraseña obligatorio (`debeCambiarPassword`).
+- [ ] Recuperación de contraseña (`/recuperar-contrasena`, `/restablecer-contrasena` y Resend).
 - [ ] Repositorios que faltan (Cliente, Libro, Autor, Categoría, Editorial, Usuario, Reporte, Auditoría).
 - [ ] Pantallas del prototipo P14.
 - [ ] Flujos transaccionales de préstamo, devolución, multa y sanción.
@@ -582,7 +583,8 @@ Notas:
 - [x] Guard `requireUsuario` / `requirePermiso`.
 - [x] Dashboard y cierre de sesión.
 - [x] Script `seed:admin`.
-- [ ] Cambio de contraseña obligatorio.
+- [x] Cambio de contraseña obligatorio.
+- [ ] Recuperación de contraseña con Resend.
 - [ ] Completar `Usuario`, `Devolucion` y `ReglaPrestamo`.
 - [ ] Repositorios faltantes.
 - [ ] Catálogo (listado, alta, detalle).

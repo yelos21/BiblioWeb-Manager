@@ -5,7 +5,9 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
 
-export async function requireUsuario() {
+export async function requireUsuario(opciones?: {
+  permitirPasswordPendiente?: boolean;
+}) {
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session) redirect("/login");
 
@@ -22,6 +24,10 @@ export async function requireUsuario() {
   });
 
   if (!usuario) redirect("/login");
+
+  if (usuario.debeCambiarPassword && !opciones?.permitirPasswordPendiente) {
+    redirect("/cambiar-password");
+  }
 
   return { session, usuario };
 }
