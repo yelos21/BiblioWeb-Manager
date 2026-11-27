@@ -7,11 +7,13 @@ type Db = Prisma.TransactionClient;
 
 class ReglaRepository{
     async obtenerVigente(db: Db = prisma): Promise< ReglaPrestamo>{
+        const hoy = new Date();
         const fila = await db.reglaPrestamo.findFirst({
             where: {
+                vigenteDesde: { lte: hoy },
                 OR: [
                     { vigenteHasta: null },
-                    { vigenteHasta: { gte: new Date() } },
+                    { vigenteHasta: { gte: hoy } },
                 ],
             },
             orderBy: [{vigenteDesde: "desc"}, {id: "desc"}],
@@ -19,16 +21,17 @@ class ReglaRepository{
 
         if (!fila){
             throw new Error("No hay regla de prestamo configurada");
-        }  
-            return new ReglaPrestamo(
-                fila.id,
-                fila.nombre,
-                fila.diasPrestamo,
-                fila.maxPrestamosPorCliente,
-                fila.multaPorDia.toNumber(), 
-                fila.diasSancionBase,           
-             )
-        
+        }
+        return new ReglaPrestamo(
+            fila.id,
+            fila.nombre,
+            fila.diasPrestamo,
+            fila.maxPrestamosPorCliente,
+            fila.multaPorDia.toNumber(),
+            fila.diasSancionBase,
+            fila.vigenteDesde,
+            fila.vigenteHasta,
+        );
     }
 
 }

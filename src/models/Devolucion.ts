@@ -1,4 +1,4 @@
-import type { EstadoFisico } from "./Enums";
+import type { EstadoEjemplar, EstadoFisico } from "./Enums";
 import type { Prestamo } from "./prestamo";
 import type { ReglaPrestamo } from "./ReglaPrestamo";
 import { Multa } from "./multa";
@@ -9,6 +9,7 @@ export interface DatosDevolucion {
     idUsuarioRecibe:number;
     fecha: Date;
     estadoFisicoAlRecibir: EstadoFisico;
+    estadoEjemplarResultante: EstadoEjemplar | null;
     observaciones: string | null;
 }
 
@@ -19,6 +20,7 @@ export class Devolucion {
     prestamo: Prestamo,
     idUsuarioRecibe: number,
     estadoFisicoAlRecibir: EstadoFisico,
+    estadoEjemplarResultante: EstadoEjemplar | null = null,
     observaciones: string | null = null,
     fecha: Date = new Date(),
     ):Devolucion{
@@ -31,6 +33,7 @@ export class Devolucion {
                 idUsuarioRecibe,
                 fecha,
                 estadoFisicoAlRecibir,
+                estadoEjemplarResultante,
                 observaciones: observaciones?.trim() || null,
             },
             prestamo,
@@ -51,6 +54,7 @@ export class Devolucion {
     get idUsuarioRecibe() { return this.d.idUsuarioRecibe; }
     get fecha() { return this.d.fecha; }
     get estadoFisicoAlRecibir() { return this.d.estadoFisicoAlRecibir; }
+    get estadoEjemplarResultante() { return this.d.estadoEjemplarResultante; }
     get observaciones() { return this.d.observaciones; }
     get diasRetraso(): number { return this.prestamo.calcularDiasRetraso(this.d.fecha); }
     

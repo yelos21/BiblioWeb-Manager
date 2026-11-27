@@ -2,6 +2,7 @@ import "server-only"
 import { Prisma, Sancion as FilaSancion } from "@/generated/prisma/client"
 import { prisma } from "@/lib/prisma"
 import { Sancion } from "@/models/sancion"
+import { fechaCalendario } from "@/lib/fechas"
 
 type Db = Prisma.TransactionClient
 
@@ -11,6 +12,40 @@ class SancionRepository{
             where: {id},
         });
         return fila ? this.aDominio(fila): null; 
+    }
+
+    async buscarPorMulta(idMulta: number, db: Db = prisma): Promise<Sancion | null> {
+        const fila = await db.sancion.findUnique({ where: { idMulta } });
+        return fila ? this.aDominio(fila) : null;
+    }
+
+    async listarPorCliente(idCliente: number, db: Db = prisma): Promise<Sancion[]> {
+        const filas = await db.sancion.findMany({
+            where: { idCliente },
+            orderBy: [{ fechaInicio: "desc" }, { id: "desc" }],
+        });
+        return filas.map((f) => this.aDominio(f));
+    }
+
+
+    async listarVigentesPorCliente(
+        idCliente: number,
+        hoy: Date = new Date(),
+        db: Db = prisma,
+    ): Promise<Sancion[]> {
+        const filas = await db.sancion.findMany({
+            where: { idCliente, fechaLevantada: null, fechaFin: { gte: fechaCalendario(hoy) } },
+            orderBy: { fechaFin: "desc" },
+        });
+        return filas.map((f) => this.aDominio(f));
+    }
+
+    async listarVigentes(hoy: Date = new Date(), db: Db = prisma): Promise<Sancion[]> {
+        const filas = await db.sancion.findMany({
+            where: { fechaLevantada: null, fechaFin: { gte: fechaCalendario(hoy) } },
+            orderBy: { fechaFin: "asc" },
+        });
+        return filas.map((f) => this.aDominio(f));
     }
 
     async guardar(sancion: Sancion, db: Db = prisma): Promise<Sancion>{
@@ -34,9 +69,7 @@ class SancionRepository{
         return this.aDominio(fila);
     }
 
-
-
-    private aDominio(fila:FilaSancion): Sancion{
+    aDominio(fila:FilaSancion): Sancion{
         return Sancion.reconstruir({
             id: fila.id,
             idCliente: fila.idCliente,

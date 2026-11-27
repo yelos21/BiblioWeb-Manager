@@ -15,6 +15,7 @@ class DevolucionRepository{
                     idUsuarioRecibe: devolucion.idUsuarioRecibe,
                     fecha: devolucion.fecha,
                     estadoFisicoAlRecibir: devolucion.estadoFisicoAlRecibir,
+                    estadoEjemplarResultante: devolucion.estadoEjemplarResultante,
                     observaciones: devolucion.observaciones,
             }
         });
@@ -24,6 +25,7 @@ class DevolucionRepository{
             idUsuarioRecibe: fila.idUsuarioRecibe,
             fecha: fila.fecha,
             estadoFisicoAlRecibir: fila.estadoFisicoAlRecibir,
+            estadoEjemplarResultante: fila.estadoEjemplarResultante,
             observaciones: fila.observaciones
         },
         prestamo,

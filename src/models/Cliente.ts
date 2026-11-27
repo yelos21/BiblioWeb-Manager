@@ -70,6 +70,8 @@ export class Cliente extends Persona {
         return new Cliente({ ...datos }, [...sanciones], [...prestamos], [...multas]);
     }
 
+    aDatos(): DatosCliente { return { ...this.d }; }
+
     get credencial() { return this.d.credencial; }
     get nombres() { return this.d.nombres; }
     get apellidos() { return this.d.apellidos; }
