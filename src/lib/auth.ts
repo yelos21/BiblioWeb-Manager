@@ -2,6 +2,7 @@ import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 import { nextCookies } from "better-auth/next-js";
 import { admin, createAccessControl } from "better-auth/plugins";
+import { correoRestablecerPassword } from "./email-templates";
 import { prisma } from "./prisma";
 
 const statements = {
@@ -65,6 +66,36 @@ export const auth = betterAuth({
     enabled: true,
     // P4: solo el personal autorizado tiene cuenta; no hay registro publico.
     disableSignUp: true,
+    resetPasswordTokenExpiresIn: 60 * 60,
+    revokeSessionsOnPasswordReset: true,
+    sendResetPassword: async ({ user, url }) => {
+      if (process.env.NODE_ENV !== "production") {
+        console.info(
+          `[dev] Enlace de recuperación para ${user.email}: ${url}`,
+        );
+      }
+
+      try {
+        // Import dinámico: `email.ts` usa `server-only` y este archivo también
+        // lo importan scripts de Node (por ejemplo, el seed del administrador).
+        const { enviarCorreo } = await import("./email");
+
+        await enviarCorreo({
+          to: user.email,
+          subject: "Restablece tu contraseña de BiblioWeb Manager",
+          html: correoRestablecerPassword({
+            nombre: user.name,
+            url,
+          }),
+        });
+      } catch (error) {
+        // No se debe revelar si el correo existe ni romper la solicitud.
+        console.error(
+          "No se pudo enviar el correo de recuperación de contraseña:",
+          error,
+        );
+      }
+    },
   },
   plugins: [
     admin({

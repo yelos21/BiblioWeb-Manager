@@ -32,7 +32,7 @@
 - [x] Protección de rutas y permisos en servidor (`src/lib/session.ts`).
 - [x] Script para crear la primera cuenta de administrador.
 - [x] Cambio de contraseña obligatorio (`debeCambiarPassword`).
-- [ ] Recuperación de contraseña (`/recuperar-contrasena`, `/restablecer-contrasena` y Resend).
+- [x] Recuperación de contraseña (`/recuperar-contrasena`, `/restablecer-contrasena` y Resend).
 - [ ] Repositorios que faltan (Cliente, Libro, Autor, Categoría, Editorial, Usuario, Reporte, Auditoría).
 - [ ] Pantallas del prototipo P14.
 - [ ] Flujos transaccionales de préstamo, devolución, multa y sanción.
@@ -532,7 +532,7 @@ Llamarla en las acciones sensibles (crear/editar/eliminar, préstamos, devolucio
   - confirmación de devolución,
   - aviso de multa.
 - No bloquear la transacción principal si el correo falla: capturar el error y registrar el fallo.
-- Configurar `sendResetPassword` en `src/lib/auth.ts` si se implementa “olvidé mi contraseña”.
+- `sendResetPassword` ya está configurado en `src/lib/auth.ts` para “olvidé mi contraseña”.
 
 **Criterio de aceptación:**
 
@@ -584,7 +584,7 @@ Notas:
 - [x] Dashboard y cierre de sesión.
 - [x] Script `seed:admin`.
 - [x] Cambio de contraseña obligatorio.
-- [ ] Recuperación de contraseña con Resend.
+- [x] Recuperación de contraseña con Resend.
 - [ ] Completar `Usuario`, `Devolucion` y `ReglaPrestamo`.
 - [ ] Repositorios faltantes.
 - [ ] Catálogo (listado, alta, detalle).

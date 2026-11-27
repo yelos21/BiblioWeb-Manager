@@ -18,10 +18,7 @@ export interface Correo {
   replyTo?: string;
 }
 
-/**
- * Envia un correo transaccional con Resend.
- * Se usa para notificaciones de prestamos, devoluciones y multas.
- */
+
 export async function enviarCorreo({ to, subject, html, replyTo }: Correo) {
   const { data, error } = await getResend().emails.send({
     from: FROM,
