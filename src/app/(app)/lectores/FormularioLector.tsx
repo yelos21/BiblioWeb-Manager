@@ -7,7 +7,7 @@ import Button from "@/components/ui/button";
 import Input from "@/components/ui/input";
 import Select from "@/components/ui/select";
 import { tiposDocumento } from "@/lib/documentos";
-import { crearLector, type CampoLector, type DatosLector } from "../actions";
+import { crearLector, editarLector, type CampoLector, type DatosLector } from "./actions";
 
 const VACIO: DatosLector = {
   nombres: "",
@@ -21,9 +21,16 @@ const VACIO: DatosLector = {
 
 type ErrorForm = { mensaje: string; campo?: CampoLector };
 
-export default function FormularioLector() {
+type Props = {
+  /** Si se recibe, el formulario edita a ese lector; si no, registra uno nuevo. */
+  lectorId?: number;
+  inicial?: DatosLector;
+};
+
+export default function FormularioLector({ lectorId, inicial }: Props) {
   const router = useRouter();
-  const [datos, setDatos] = useState<DatosLector>(VACIO);
+  const editando = lectorId !== undefined;
+  const [datos, setDatos] = useState<DatosLector>(inicial ?? VACIO);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<ErrorForm | null>(null);
 
@@ -44,15 +51,28 @@ export default function FormularioLector() {
     setLoading(true);
 
     try {
-      const result = await crearLector(datos);
-      if (!result.ok) {
-        setError({ mensaje: result.error, campo: result.campo });
-        return;
+      if (editando) {
+        const result = await editarLector(lectorId, datos);
+        if (!result.ok) {
+          setError({ mensaje: result.error, campo: result.campo });
+          return;
+        }
+        router.push(`/lectores/${lectorId}?actualizado=1`);
+      } else {
+        const result = await crearLector(datos);
+        if (!result.ok) {
+          setError({ mensaje: result.error, campo: result.campo });
+          return;
+        }
+        router.push(`/lectores?creado=${result.credencial}`);
       }
-      router.push(`/lectores?creado=${result.credencial}`);
       router.refresh();
     } catch {
-      setError({ mensaje: "Ocurrió un error inesperado al registrar el lector." });
+      setError({
+        mensaje: editando
+          ? "Ocurrió un error inesperado al guardar los cambios."
+          : "Ocurrió un error inesperado al registrar el lector.",
+      });
     } finally {
       setLoading(false);
     }
@@ -65,9 +85,13 @@ export default function FormularioLector() {
       className="rounded-2xl border border-[#DDE4E0] bg-white p-6 shadow-sm sm:p-8"
     >
       <div className="mb-6 border-b border-[#DDE4E0] pb-5">
-        <h2 className="font-display text-xl font-normal text-[#1B2D27]">Información requerida</h2>
+        <h2 className="font-display text-xl font-normal text-[#1B2D27]">
+          {editando ? "Datos del lector" : "Información requerida"}
+        </h2>
         <p className="mt-1 text-sm text-[#7A8B85]">
-          El personal bibliotecario crea y administra todas las cuentas de lectores.
+          {editando
+            ? "Actualiza los datos personales y de contacto del lector."
+            : "El personal bibliotecario crea y administra todas las cuentas de lectores."}
         </p>
       </div>
 
@@ -164,11 +188,15 @@ export default function FormularioLector() {
       </div>
 
       <div className="mt-8 flex flex-wrap justify-end gap-3 border-t border-[#DDE4E0] pt-5">
-        <Button href="/lectores" variant="secondary" disabled={loading}>
+        <Button
+          href={editando ? `/lectores/${lectorId}` : "/lectores"}
+          variant="secondary"
+          disabled={loading}
+        >
           Cancelar
         </Button>
         <Button type="submit" variant="primary" loading={loading} leftIcon={<Check size={16} />}>
-          Registrar lector
+          {editando ? "Guardar cambios" : "Registrar lector"}
         </Button>
       </div>
     </form>

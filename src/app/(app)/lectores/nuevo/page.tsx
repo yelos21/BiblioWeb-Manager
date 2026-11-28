@@ -2,7 +2,7 @@ import { Users } from "lucide-react";
 import EncabezadoPagina from "@/components/layout/EncabezadoPagina";
 import TarjetaInfo from "@/components/ui/TarjetaInfo";
 import { requirePermiso } from "@/lib/session";
-import FormularioLector from "./FormularioLector";
+import FormularioLector from "../FormularioLector";
 
 export const instant = false;
 

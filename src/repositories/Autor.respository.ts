@@ -11,6 +11,15 @@ class AutorRepository {
         return fila ? this.aDominio(fila) : null;
     }
 
+    
+    async buscarPorNombre(nombre: string, db: Db = prisma): Promise<Autor | null> {
+        const fila = await db.autor.findFirst({
+            where: { nombre: { equals: nombre.trim(), mode: "insensitive" } },
+            orderBy: { id: "asc" },
+        });
+        return fila ? this.aDominio(fila) : null;
+    }
+
     async listar(texto?: string, db: Db = prisma): Promise<Autor[]> {
         const filas = await db.autor.findMany({
             where: texto?.trim()

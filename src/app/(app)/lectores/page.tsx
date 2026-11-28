@@ -1,29 +1,15 @@
 import Link from "next/link";
 import { Plus, Search } from "lucide-react";
 import EncabezadoPagina from "@/components/layout/EncabezadoPagina";
+import Chip from "@/components/ui/Chip";
 import { requirePermiso } from "@/lib/session";
 import { clienteRepository } from "@/repositories/Cliente.repository";
-import type { EstadoCliente } from "@/models/Enums";
 
 export const instant = false;
 
 const POR_PAGINA = 15;
 
 type Props = { searchParams: Promise<{ q?: string; pagina?: string; creado?: string }> };
-
-function EstadoChip({ estado }: { estado: EstadoCliente }) {
-  const habilitado = estado === "ACTIVO";
-  return (
-    <span
-      className={
-        "inline-flex rounded-full px-2.5 py-1 text-[11px] font-semibold " +
-        (habilitado ? "bg-[#E8F1EC] text-[#1D5C4B]" : "bg-[#FBEAEA] text-[#B42318]")
-      }
-    >
-      {habilitado ? "Habilitado" : "Sancionado"}
-    </span>
-  );
-}
 
 export default async function LectoresPage({ searchParams }: Props) {
   await requirePermiso("lectores.ver");
@@ -113,7 +99,16 @@ export default async function LectoresPage({ searchParams }: Props) {
                   <tr key={c.email} className="hover:bg-[#F8FAF9]">
                     <td className="px-5 py-3.5 font-medium text-[#1B2D27]">{c.credencial ?? "—"}</td>
                     <td className="px-5 py-3.5">
-                      <p className="font-semibold text-[#1B2D27]">{c.nombre}</p>
+                      {c.id === null ? (
+                        <p className="font-semibold text-[#1B2D27]">{c.nombre}</p>
+                      ) : (
+                        <Link
+                          href={`/lectores/${c.id}`}
+                          className="font-semibold text-[#1B2D27] hover:text-[#1D5C4B] hover:underline"
+                        >
+                          {c.nombre}
+                        </Link>
+                      )}
                       <p className="text-xs text-[#7A8B85]">{c.email}</p>
                     </td>
                     <td className="px-5 py-3.5 text-[#1B2D27]">
@@ -121,7 +116,9 @@ export default async function LectoresPage({ searchParams }: Props) {
                     </td>
                     <td className="px-5 py-3.5 text-[#1B2D27]">{c.telefono ?? "—"}</td>
                     <td className="px-5 py-3.5">
-                      <EstadoChip estado={c.estado} />
+                      <Chip tono={c.estado === "ACTIVO" ? "verde" : "rojo"}>
+                        {c.estado === "ACTIVO" ? "Habilitado" : "Sancionado"}
+                      </Chip>
                     </td>
                   </tr>
                 ))}

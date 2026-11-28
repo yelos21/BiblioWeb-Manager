@@ -72,6 +72,35 @@ export class Cliente extends Persona {
 
     aDatos(): DatosCliente { return { ...this.d }; }
 
+    /**
+     * Devuelve un Cliente nuevo con los datos personales cambiados (Persona guarda nombre y
+     * correo como readonly, por eso no se muta la instancia). Conserva sanciones, prestamos y multas.
+     */
+    conDatos(
+        cambios: Partial<Pick<DatosCliente,
+            "nombres" | "apellidos" | "tipoDocumento" | "identificacion" | "email" | "telefono" | "direccion">>,
+    ): Cliente {
+        const n = { ...this.d, ...cambios };
+        if (!n.nombres.trim()) throw new Error("Los nombres son obligatorios");
+        if (!n.apellidos.trim()) throw new Error("Los apellidos son obligatorios");
+        if (!n.identificacion.trim()) throw new Error("La identificacion es obligatoria");
+        if (!FORMATO_EMAIL.test(n.email.trim())) throw new Error("Correo electronico invalido");
+        return new Cliente(
+            {
+                ...n,
+                nombres: n.nombres.trim(),
+                apellidos: n.apellidos.trim(),
+                identificacion: n.identificacion.trim(),
+                email: n.email.trim().toLowerCase(),
+                telefono: n.telefono?.trim() || null,
+                direccion: n.direccion?.trim() || null,
+            },
+            [...this.sanciones],
+            [...this.prestamos],
+            [...this.multas],
+        );
+    }
+
     get credencial() { return this.d.credencial; }
     get nombres() { return this.d.nombres; }
     get apellidos() { return this.d.apellidos; }

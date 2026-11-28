@@ -25,6 +25,10 @@ export type CrearLectorResult =
   | { ok: true; id: number; credencial: number }
   | { ok: false; error: string; campo?: CampoLector };
 
+export type EditarLectorResult =
+  | { ok: true; cambios: number }
+  | { ok: false; error: string; campo?: CampoLector };
+
 const FORMATO_EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 type Validado =
@@ -82,12 +86,13 @@ function validar(input: DatosLector): Validado {
   };
 }
 
-
-
-
+/**
+ * Registra un lector nuevo. Requiere `lectores.gestionar`.
+ * El lector y su registro de auditoría se guardan en una sola transacción.
+ */
 export async function crearLector(input: DatosLector): Promise<CrearLectorResult> {
-
-    const { usuario } = await requirePermiso("lectores.gestionar");
+  // Fuera de try/catch: si falta la sesión, requireUsuario redirige lanzando una excepción de Next.
+  const { usuario } = await requirePermiso("lectores.gestionar");
 
   const validado = validar(input);
   if (!validado.ok) return validado;
@@ -139,5 +144,73 @@ export async function crearLector(input: DatosLector): Promise<CrearLectorResult
     }
     console.error("Error al registrar el lector:", error);
     return { ok: false, error: "No se pudo registrar el lector. Inténtalo de nuevo." };
+  }
+}
+
+const CAMPOS_EDITABLES = [
+  "nombres",
+  "apellidos",
+  "tipoDocumento",
+  "identificacion",
+  "email",
+  "telefono",
+  "direccion",
+] as const;
+
+/**
+ * Edita los datos personales de un lector. Requiere `lectores.gestionar`.
+ * La credencial y quién lo registró no cambian. Si no hay cambios, no escribe nada.
+ */
+export async function editarLector(id: number, input: DatosLector): Promise<EditarLectorResult> {
+  const { usuario } = await requirePermiso("lectores.gestionar");
+
+  if (!Number.isInteger(id) || id < 1) return { ok: false, error: "Lector no válido." };
+
+  const validado = validar(input);
+  if (!validado.ok) return validado;
+  const d = validado.datos;
+
+  const actual = await clienteRepository.buscarPorId(id);
+  if (!actual) return { ok: false, error: "El lector no existe." };
+
+  const porDocumento = await clienteRepository.buscarPorDocumento(d.tipoDocumento, d.identificacion);
+  if (porDocumento && porDocumento.id !== id) {
+    return { ok: false, campo: "identificacion", error: "Ya existe otro lector con ese documento." };
+  }
+  const porCorreo = await clienteRepository.buscarPorEmail(d.email);
+  if (porCorreo && porCorreo.id !== id) {
+    return { ok: false, campo: "email", error: "Ya existe otro lector con ese correo." };
+  }
+
+  const antes = actual.aDatos();
+  const cambiados = CAMPOS_EDITABLES.filter((c) => (antes[c] ?? null) !== (d[c] ?? null));
+  if (cambiados.length === 0) return { ok: true, cambios: 0 };
+
+  try {
+    const editado = actual.conDatos(d);
+
+    await prisma.$transaction(async (tx) => {
+      await clienteRepository.guardar(editado, tx);
+      await registrarAuditoria(
+        {
+          idUsuario: usuario.id,
+          accion: "EDITAR",
+          entidad: "cliente",
+          idRegistro: id,
+          detalle: `Campos modificados: ${cambiados.join(", ")}`,
+        },
+        tx,
+      );
+    });
+
+    revalidatePath("/lectores");
+    revalidatePath(`/lectores/${id}`);
+    return { ok: true, cambios: cambiados.length };
+  } catch (error) {
+    if (error instanceof Error && error.message.startsWith("Ya existe")) {
+      return { ok: false, error: error.message };
+    }
+    console.error("Error al editar el lector:", error);
+    return { ok: false, error: "No se pudo guardar los cambios. Inténtalo de nuevo." };
   }
 }
